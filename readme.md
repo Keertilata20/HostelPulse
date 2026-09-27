@@ -1,4 +1,5 @@
-# HostelPulse- a single platform solution for your hostel problems
+# HostelPulse - a single platform solution for your hostel problems
+
 > ***IoT-based Live Mess Crowd & Wait-Time Estimator with Water Tank Level Monitor***
 
 ---
