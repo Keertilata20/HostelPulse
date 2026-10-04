@@ -13,7 +13,7 @@ HostelPulse sets out to give hostel students and mess staff real-time, data-back
 </p>
 
 ## Objectives
-<ol type="1">
+<ol type="i">
   <li>	Count entries and exits at the mess doorway with at least 90% accuracy under normal, single-file flow. </li>
   <li>	Estimate the current waiting time from live occupancy and the recent exit rate, and validate the estimate against real measured waits. </li>
   <li>	Measure the water tank level to within about ± 2 cm, and derive the fill/drain rate and the estimated time to empty. </li>
