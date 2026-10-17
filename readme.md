@@ -3,7 +3,6 @@
 > ***IoT-based Live Mess Crowd & Wait-Time Estimator with Water Tank Level Monitor***
 
 ---
--
 <p>
 Ever found yourself strangled in the morning right before your 9 am class with the taps in your hostel washrooms as dry as the Sahara or have you ever waited in never-ending queues that stretch past your mess gates for a small serving of your mess food?
 
