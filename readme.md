@@ -3,7 +3,7 @@
 > ***IoT-based Live Mess Crowd & Wait-Time Estimator with Water Tank Level Monitor***
 
 ---
-
+-
 <p>
 Ever found yourself strangled in the morning right before your 9 am class with the taps in your hostel washrooms as dry as the Sahara or have you ever waited in never-ending queues that stretch past your mess gates for a small serving of your mess food?
 
@@ -21,5 +21,4 @@ HostelPulse sets out to give hostel students and mess staff real-time, data-back
   <li>	Run both nodes continuously for at least 7 days on site and analyse the collected data to report real, honest accuracy figures. </li>
 
 </ol>
-
 
