@@ -1,23 +1,244 @@
-# HostelPulse - a single platform solution for your hostel problems
+# 🌿 HostelPulse
+### A Single Platform Solution for Your Hostel Problems
 
-> ***IoT-based Live Mess Crowd & Wait-Time Estimator with Water Tank Level Monitor***
-
----
-<p>
-Ever found yourself strangled in the morning right before your 9 am class with the taps in your hostel washrooms as dry as the Sahara or have you ever waited in never-ending queues that stretch past your mess gates for a small serving of your mess food?
-
-To bring an end to these problems, we introduce our IOT-based platform- HostelPulse.
-
-HostelPulse sets out to give hostel students and mess staff real-time, data-backed visibility into two shared resources that are currently managed by guesswork: mess crowding and overhead water tank level. 
+<p align="center">
+  <strong>IoT-Based Smart Hostel Monitoring Platform</strong>
+  <br/>
+  Real-time Mess Crowd Monitoring · Occupancy Tracking · Intelligent Insights
 </p>
 
-## Objectives
-<ol type="i">
-  <li>	Count entries and exits at the mess doorway with at least 90% accuracy under normal, single-file flow. </li>
-  <li>	Estimate the current waiting time from live occupancy and the recent exit rate, and validate the estimate against real measured waits. </li>
-  <li>	Measure the water tank level to within about ± 2 cm, and derive the fill/drain rate and the estimated time to empty. </li>
-  <li>  Deliver live status and alerts to students and staff through a Telegram bot and a web page, with historical data stored for analysis. </li>
-  <li>	Run both nodes continuously for at least 7 days on site and analyse the collected data to report real, honest accuracy figures. </li>
+<p align="center">
+  <img src="https://img.shields.io/badge/Project-Under%20Development-orange?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/IoT-ESP8266-blue?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/MQTT-Mosquitto-purple?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Backend-FastAPI-green?style=for-the-badge" />
+</p>
 
-</ol>
+---
 
+## 💡 The Problem
+
+Ever found yourself rushing in the morning, right before your 9 AM class, only to discover a queue stretching beyond your mess gates? Or wasted precious time trying to figure out whether the mess is crowded before heading out?
+
+HostelPulse aims to solve these everyday hostel problems through an IoT-powered monitoring platform.
+
+It brings real-time, data-backed visibility to shared hostel resources, starting with mess crowd monitoring and occupancy tracking.
+
+Our goal is simple: **less guesswork, better planning, smarter hostels.**
+
+---
+
+## 🎯 Project Objectives
+
+1. Count entries and exits at the mess doorway with a target accuracy of at least 90% under normal, single-file flow.
+2. Estimate waiting time using live occupancy and recent exit rates.
+3. Provide real-time mess status to students and staff.
+4. Maintain historical occupancy data for analysis and reporting.
+5. Build a reliable, low-cost IoT monitoring system suitable for deployment in hostel environments.
+
+---
+
+## ✨ Core Features
+
+| Feature | Description | Status |
+|---|---|---|
+| 👥 People Counting | Tracks mess entries and exits using two IR sensors | In development |
+| 📊 Live Occupancy | Maintains the estimated number of people inside | In development |
+| ⏱️ Wait-Time Estimation | Estimates queue waiting time using occupancy and exit rate | Planned |
+| 📡 MQTT Communication | Transfers sensor telemetry to the local broker | Broker tested |
+| 📈 Historical Insights | Stores and visualizes occupancy trends | Planned |
+| 🔔 Notifications | Provides alerts and mess updates | Planned |
+| 💧 Water Tank Monitoring | Originally proposed extension for hostel water monitoring | Future scope |
+
+---
+
+## 🏗️ System Architecture
+
+The current architecture follows an offline-first IoT communication approach.
+
+```text
+       ┌──────────────────────┐
+       │   Two IR Sensors     │
+       │   E18-D80NK          │
+       └──────────┬───────────┘
+                  │
+                  ▼
+       ┌──────────────────────┐
+       │   ESP8266 NodeMCU    │
+       │   People Counting    │
+       └──────────┬───────────┘
+                  │
+                  │ Wi-Fi / MQTT
+                  ▼
+       ┌──────────────────────┐
+       │  Mosquitto Broker    │
+       │  Local MQTT Server   │
+       └──────────┬───────────┘
+                  │
+                  ▼
+       ┌──────────────────────┐
+       │   Python Backend     │
+       │   FastAPI            │
+       └──────────┬───────────┘
+                  │
+                  ▼
+       ┌──────────────────────┐
+       │   PostgreSQL         │
+       │   Telemetry Storage  │
+       └──────────┬───────────┘
+                  │
+                  ▼
+       ┌──────────────────────┐
+       │   React Dashboard    │
+       │   Live Monitoring    │
+       └──────────────────────┘
+```
+
+### Communication Strategy
+
+- **Local-first operation:** The ESP8266 and laptop communicate over a shared Wi-Fi hotspot.
+- **MQTT messaging:** Mosquitto acts as the local message broker.
+- **Backend processing:** FastAPI will receive and process sensor telemetry.
+- **Data persistence:** PostgreSQL will store historical occupancy information.
+- **Visualization:** The React dashboard will present monitoring information.
+
+---
+
+## 🛠️ Technology Stack
+
+| Layer | Technologies |
+|---|---|
+| Microcontroller | NodeMCU ESP8266 |
+| Sensors | E18-D80NK IR Proximity Sensors |
+| Firmware | Embedded C++ / Arduino IDE |
+| Communication | MQTT |
+| MQTT Broker | Eclipse Mosquitto |
+| Backend | Python, FastAPI |
+| Database | PostgreSQL |
+| Frontend | React |
+| Version Control | Git, GitHub |
+
+---
+
+## 📡 MQTT Communication
+
+HostelPulse uses MQTT for lightweight communication between the mess node and the backend.
+
+**Broker configuration**
+
+- Broker: Eclipse Mosquitto 2.1.2
+- Protocol: MQTT
+- Port: 1883
+- Deployment: Local laptop broker over Android hotspot
+
+**Telemetry topic**
+
+```text
+hostelpulse/mess/mess-node-01/telemetry
+```
+
+**Device status topic**
+
+```text
+hostelpulse/mess/mess-node-01/status
+```
+
+**Example telemetry payload**
+
+```json
+{
+  "schema_version": 1,
+  "device_id": "mess-node-01",
+  "event": "ENTRY",
+  "entries": 18,
+  "exits": 6,
+  "occupancy": 12,
+  "sensor_a": 0,
+  "sensor_b": 0,
+  "uptime_ms": 125000
+}
+```
+
+The values above are illustrative.
+
+---
+
+## 📂 Repository Structure
+
+```text
+HostelPulse/
+│
+├── firmware/
+│   └── mess-node/
+│       ├── mess-node.ino
+│       └── wifi_test/
+│
+├── hardware/
+│   └── components.md
+│
+├── backend/
+│   └── mqtt/
+│       └── hostelpulse-mosquitto.conf
+│
+├── documentation/
+│   ├── architecture.md
+│   ├── mqtt-data-format.md
+│   ├── mqtt-setup.md
+│   └── wifi-connectivity.md
+│
+├── .gitignore
+└── readme.md
+```
+
+---
+
+## 🚧 Development Roadmap
+
+- [x] Initial ESP8266 hardware setup
+- [x] IR sensor experimentation
+- [x] Wi-Fi connectivity testing
+- [x] Mosquitto MQTT broker installation
+- [x] Local MQTT publish/subscribe testing
+- [x] Hotspot network connectivity verification
+- [ ] ESP8266-to-MQTT integration
+- [ ] Sensor-based MQTT telemetry publishing
+- [ ] Python MQTT subscriber
+- [ ] PostgreSQL integration
+- [ ] React dashboard integration
+- [ ] On-site testing and accuracy evaluation
+
+---
+
+## 📚 Documentation
+
+| Document | Description |
+|---|---|
+| [System Architecture](documentation/architecture.md) | Overall system architecture and data flow |
+| [Hardware Components](hardware/components.md) | Hardware components and specifications |
+| [MQTT Data Format](documentation/mqtt-data-format.md) | Telemetry topics and JSON structure |
+| [MQTT Setup](documentation/mqtt-setup.md) | Broker installation and connectivity testing |
+| [Wi-Fi Connectivity](documentation/wifi-connectivity.md) | ESP8266 Wi-Fi setup and testing |
+
+---
+
+## 🔮 Future Scope
+
+HostelPulse is designed to be extensible.
+
+Potential future enhancements include:
+
+- Water tank level monitoring.
+- Predictive mess crowd analysis.
+- Intelligent waiting-time estimation.
+- Telegram-based notifications.
+- Multi-hostel monitoring and analytics.
+
+---
+
+## 🌱 Our Vision
+
+HostelPulse is an attempt to make everyday hostel life a little more predictable through accessible IoT technology.
+
+We believe shared resources should be monitored intelligently, not managed through guesswork.
+
+**Built with curiosity, code, and the goal of making hostel life smarter.**
