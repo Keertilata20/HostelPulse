@@ -200,7 +200,8 @@ HostelPulse/
 - [x] Mosquitto MQTT broker installation
 - [x] Local MQTT publish/subscribe testing
 - [x] Hotspot network connectivity verification
-- [ ] ESP8266-to-MQTT integration
+- [x] ESP8266-to-MQTT integration
+- [x] MQTT test message publishing
 - [ ] Sensor-based MQTT telemetry publishing
 - [ ] Python MQTT subscriber
 - [ ] PostgreSQL integration

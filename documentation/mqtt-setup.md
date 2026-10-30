@@ -163,3 +163,39 @@ This confirms basic IP-level connectivity during the test session.
 - The broker must be running on the laptop for local MQTT communication.
 - The laptop and ESP8266 must be connected to the same local network.
 - The current broker is manually started and is not yet configured as a persistent Windows service.
+
+
+## 12. ESP8266-to-MQTT Integration Test
+
+The ESP8266 was successfully connected to the local Mosquitto broker using the PubSubClient 2.8.0 Arduino library.
+
+### Configuration
+
+| Parameter | Value |
+|---|---|
+| Device | NodeMCU ESP8266 |
+| MQTT Library | PubSubClient 2.8.0 |
+| Broker IP | 10.231.36.131 |
+| Broker Port | 1883 |
+| MQTT Topic | hostelpulse/test |
+| Publishing Interval | 5 seconds |
+
+### Test Results
+
+- ESP8266 successfully connected to the Android hotspot.
+- ESP8266 successfully established an MQTT connection.
+- MQTT messages were published repeatedly.
+- Mosquitto received the messages.
+- PowerShell subscriber displayed the received messages.
+
+### Sample Message
+
+```text
+Hello from HostelPulse ESP8266!
+```
+
+### Result
+
+ESP8266-to-Mosquitto MQTT communication was successfully verified over the local hotspot network.
+
+The next step is integrating MQTT publishing into the actual mess people-counter firmware.
