@@ -122,7 +122,7 @@ Use the current device address from the local network settings if you need to ch
 | ESP8266-to-MQTT test publishing | Completed for a standalone test message |
 | Physical sensor telemetry integrated with backend | Pending |
 | Python MQTT subscriber | Verified with simulated telemetry |
-| PostgreSQL integration | Not implemented |
+| PostgreSQL integration | Implemented with simulated telemetry; physical telemetry flow pending |
 
 ## 10. Next Development Steps
 
@@ -131,8 +131,7 @@ Use the current device address from the local network settings if you need to ch
 3. Publish MQTT test messages from the ESP8266.
 4. Integrate MQTT publishing with the mess people-counter firmware.
 5. Integrate physical sensor telemetry with the Python backend and verify it end to end.
-6. Store telemetry data in PostgreSQL.
-7. Connect the backend to the React dashboard.
+6. Connect the backend to the React dashboard.
 
 ## 11. Security and Deployment Notes
 
@@ -186,12 +185,15 @@ The following backend components have been verified:
 - The FastAPI `/health` endpoint responds successfully.
 - The Python MQTT subscriber connects to the configured Mosquitto broker and subscribes to `hostelpulse/mess/mess-node-01/telemetry`.
 - A simulated JSON telemetry message with `"event": "ENTRY"` was received and parsed successfully.
+- PostgreSQL accepts connections, the backend creates its tables, and a simulated MQTT `ENTRY` payload is validated, stored, and returned by `/telemetry/latest`, `/occupancy/current`, and `/telemetry/events`.
 
 To repeat the simulated telemetry check, start the broker, then start the backend from the `backend` directory. If the broker is not at the default `127.0.0.1:1883`, set `MQTT_HOST` and `MQTT_PORT` in that terminal first. Use the broker address configured on your current network; do not copy a test-session IP into the repository:
 
 ```powershell
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 .\.venv\Scripts\Activate.ps1
-$env:MQTT_HOST = "127.0.0.1"
+python -m pip install -r requirements.txt
+$env:MQTT_HOST = "10.231.36.131" # Use the IPv4 address on the listener line in ../mqtt/hostelpulse-mosquitto.conf.
 $env:MQTT_PORT = "1883"
 uvicorn app.main:app --reload
 ```
@@ -203,4 +205,4 @@ Invoke-RestMethod http://127.0.0.1:8000/health
 & "C:\Program Files\mosquitto\mosquitto_pub.exe" -h localhost -p 1883 -t "hostelpulse/mess/mess-node-01/telemetry" -m '{"schema_version":1,"device_id":"mess-node-01","event":"ENTRY","entries":1,"exits":0,"occupancy":1,"sensor_a":0,"sensor_b":1,"uptime_ms":125000}'
 ```
 
-The backend terminal should print the parsed telemetry. This test uses a simulated message; physical ESP8266 sensor telemetry through the backend remains unverified. PostgreSQL persistence and React dashboard integration are pending.
+The backend terminal should print that the telemetry was saved. Check `/telemetry/latest`, `/occupancy/current`, and `/telemetry/events` in the API or at `http://127.0.0.1:8000/docs`. This test uses a simulated message; physical ESP8266 sensor telemetry through the backend remains unverified. React dashboard integration is pending.

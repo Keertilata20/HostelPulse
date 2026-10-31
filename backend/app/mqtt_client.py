@@ -1,13 +1,15 @@
 import json
 import os
 from collections.abc import Callable
-from typing import Any
 
 import paho.mqtt.client as mqtt
+from pydantic import ValidationError
+
+from .telemetry import TelemetryPayload
 
 
 class MqttSubscriber:
-    def __init__(self, on_telemetry: Callable[[dict[str, Any]], None]) -> None:
+    def __init__(self, on_telemetry: Callable[[TelemetryPayload], None]) -> None:
         self._on_telemetry = on_telemetry
         self._host = os.getenv("MQTT_HOST", "127.0.0.1")
         self._port = int(os.getenv("MQTT_PORT", "1883"))
@@ -40,9 +42,8 @@ class MqttSubscriber:
 
     def _handle_message(self, client, userdata, message) -> None:
         try:
-            payload = json.loads(message.payload.decode("utf-8"))
-            if not isinstance(payload, dict):
-                raise ValueError("Telemetry JSON must be an object")
+            raw_payload = json.loads(message.payload.decode("utf-8"))
+            payload = TelemetryPayload.model_validate(raw_payload)
             self._on_telemetry(payload)
-        except (UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
+        except (UnicodeDecodeError, json.JSONDecodeError, ValidationError, ValueError) as exc:
             print(f"Ignored invalid telemetry: {exc}", flush=True)

@@ -127,7 +127,9 @@ The telemetry topic will carry occupancy and sensor information, while the statu
 
 The backend exposes a FastAPI health endpoint and a Python MQTT subscriber. The health endpoint responds, and the subscriber has connected to the configured Mosquitto broker, subscribed to `hostelpulse/mess/mess-node-01/telemetry`, and successfully received and parsed a simulated `ENTRY` JSON message.
 
-The planned backend responsibilities include:
+The backend validates version 1 telemetry before storage. PostgreSQL stores each valid event in `telemetry_events` and keeps the latest occupancy per device in `current_occupancy`. FastAPI exposes the latest event, current occupancy, and recent event history. Database connectivity and schema initialization are checked during startup; the API does not start if PostgreSQL is unavailable.
+
+The remaining backend responsibilities include:
 
 - Receiving sensor-node telemetry.
 - Processing occupancy information.
@@ -135,7 +137,7 @@ The planned backend responsibilities include:
 - Providing data to the frontend.
 - Supporting crowd-level monitoring.
 
-PostgreSQL persistence is not implemented yet. React dashboard integration is also pending.
+PostgreSQL persistence has been implemented and checked using the documented simulated `ENTRY` payload. Physical ESP8266 sensor telemetry through the backend has not been verified. React dashboard integration is also pending.
 
 ### 4.5 Frontend Visualization
 
@@ -203,9 +205,9 @@ Frontend displays information
 | E18-D80NK integration | Pending |
 | Wi-Fi communication | Connectivity tested; firmware integration pending |
 | MQTT broker | Mosquitto tested locally |
-| Python MQTT subscriber | Connected, subscribed, and parsed simulated `ENTRY` telemetry |
+| Python MQTT subscriber and PostgreSQL persistence | Simulated `ENTRY` received over MQTT, validated, stored, and returned through the API |
 | Physical ESP8266 sensor telemetry through backend | Pending |
-| PostgreSQL persistence | Not implemented |
+| PostgreSQL persistence | Implemented; simulated payload stored and read through database functions |
 | React dashboard integration | Pending |
 | End-to-end integration | Pending |
 
