@@ -1,2 +1,8 @@
 # Wi-Fi and MQTT credentials
 **/secrets.h
+# Python backend
+backend/.venv/
+backend/__pycache__/
+backend/app/__pycache__/
+backend/.env
+

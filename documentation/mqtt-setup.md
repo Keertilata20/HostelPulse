@@ -21,18 +21,7 @@ Mosquitto is used as the local MQTT broker to support offline-first operation.
 
 ## 3. Network Configuration
 
-The laptop and ESP8266 are connected to the same Android hotspot.
-
-Tested network addresses:
-
-| Device | IPv4 Address |
-|---|---|
-| Laptop | 10.231.36.131 |
-| ESP8266 | 10.231.36.170 |
-
-Subnet mask: 255.255.255.0
-
-Note: These are test-session addresses. DHCP may assign different addresses in future sessions.
+The laptop and ESP8266 should be connected to the same local network. Broker addresses are assigned by the network and can change, so configure the current address locally instead of recording it in this guide.
 
 ## 4. Mosquitto Installation
 
@@ -54,15 +43,7 @@ A separate configuration was created for HostelPulse:
 
 `backend/mqtt/hostelpulse-mosquitto.conf`
 
-Configuration:
-
-```conf
-listener 1883 10.231.36.131
-allow_anonymous true
-
-persistence true
-persistence_location C:/Users/Public/hostelpulse-mqtt/
-```
+See `backend/mqtt/hostelpulse-mosquitto.conf` for the local broker configuration. Set its listener to the current network interface as needed; do not commit machine-specific addresses or credentials.
 
 The persistence directory was created manually.
 
@@ -100,13 +81,13 @@ A test topic was used:
 ### Subscriber
 
 ```powershell
-& "C:\Program Files\mosquitto\mosquitto_sub.exe" -h 10.231.36.131 -p 1883 -t "hostelpulse/test" -v
+& "C:\Program Files\mosquitto\mosquitto_sub.exe" -h localhost -p 1883 -t "hostelpulse/test" -v
 ```
 
 ### Publisher
 
 ```powershell
-& "C:\Program Files\mosquitto\mosquitto_pub.exe" -h 10.231.36.131 -p 1883 -t "hostelpulse/test" -m "HostelPulse hotspot MQTT is working!"
+& "C:\Program Files\mosquitto\mosquitto_pub.exe" -h localhost -p 1883 -t "hostelpulse/test" -m "HostelPulse hotspot MQTT is working!"
 ```
 
 ### Received Message
@@ -122,12 +103,10 @@ The successful message confirms that the broker accepts MQTT connections through
 The laptop successfully pinged the ESP8266:
 
 ```powershell
-ping 10.231.36.170
+ping <current-device-address>
 ```
 
-Three direct replies were received, with response times of 2290 ms, 5 ms, and 6 ms.
-
-This confirms basic IP-level connectivity during the test session.
+Use the current device address from the local network settings if you need to check basic IP connectivity.
 
 ## 9. Current Implementation Status
 
@@ -140,10 +119,10 @@ This confirms basic IP-level connectivity during the test session.
 | Hotspot network listener | Completed |
 | Laptop-to-ESP8266 ping | Successful |
 | ESP8266 Wi-Fi connectivity | Tested successfully |
-| ESP8266 MQTT publishing | Pending |
-| MQTT integration with firmware | Pending |
-| Python MQTT subscriber | Pending |
-| PostgreSQL integration | Pending |
+| ESP8266-to-MQTT test publishing | Completed for a standalone test message |
+| Physical sensor telemetry integrated with backend | Pending |
+| Python MQTT subscriber | Verified with simulated telemetry |
+| PostgreSQL integration | Not implemented |
 
 ## 10. Next Development Steps
 
@@ -151,7 +130,7 @@ This confirms basic IP-level connectivity during the test session.
 2. Connect the ESP8266 to the Mosquitto broker.
 3. Publish MQTT test messages from the ESP8266.
 4. Integrate MQTT publishing with the mess people-counter firmware.
-5. Implement the Python MQTT subscriber.
+5. Integrate physical sensor telemetry with the Python backend and verify it end to end.
 6. Store telemetry data in PostgreSQL.
 7. Connect the backend to the React dashboard.
 
@@ -165,7 +144,7 @@ This confirms basic IP-level connectivity during the test session.
 - The current broker is manually started and is not yet configured as a persistent Windows service.
 
 
-## 12. ESP8266-to-MQTT Integration Test
+## 12. Standalone ESP8266-to-MQTT Test
 
 The ESP8266 was successfully connected to the local Mosquitto broker using the PubSubClient 2.8.0 Arduino library.
 
@@ -175,7 +154,7 @@ The ESP8266 was successfully connected to the local Mosquitto broker using the P
 |---|---|
 | Device | NodeMCU ESP8266 |
 | MQTT Library | PubSubClient 2.8.0 |
-| Broker IP | 10.231.36.131 |
+| Broker address | Current local broker address (configure locally) |
 | Broker Port | 1883 |
 | MQTT Topic | hostelpulse/test |
 | Publishing Interval | 5 seconds |
@@ -198,4 +177,30 @@ Hello from HostelPulse ESP8266!
 
 ESP8266-to-Mosquitto MQTT communication was successfully verified over the local hotspot network.
 
-The next step is integrating MQTT publishing into the actual mess people-counter firmware.
+This standalone test does not verify physical sensor telemetry flowing through the backend. Integrating that path into the mess people-counter firmware remains pending.
+
+## 13. Python Backend MQTT Milestone
+
+The following backend components have been verified:
+
+- The FastAPI `/health` endpoint responds successfully.
+- The Python MQTT subscriber connects to the configured Mosquitto broker and subscribes to `hostelpulse/mess/mess-node-01/telemetry`.
+- A simulated JSON telemetry message with `"event": "ENTRY"` was received and parsed successfully.
+
+To repeat the simulated telemetry check, start the broker, then start the backend from the `backend` directory. If the broker is not at the default `127.0.0.1:1883`, set `MQTT_HOST` and `MQTT_PORT` in that terminal first. Use the broker address configured on your current network; do not copy a test-session IP into the repository:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+$env:MQTT_HOST = "127.0.0.1"
+$env:MQTT_PORT = "1883"
+uvicorn app.main:app --reload
+```
+
+In a second terminal, check health and publish a sample message (adjust the Mosquitto executable path if needed):
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8000/health
+& "C:\Program Files\mosquitto\mosquitto_pub.exe" -h localhost -p 1883 -t "hostelpulse/mess/mess-node-01/telemetry" -m '{"schema_version":1,"device_id":"mess-node-01","event":"ENTRY","entries":1,"exits":0,"occupancy":1,"sensor_a":0,"sensor_b":1,"uptime_ms":125000}'
+```
+
+The backend terminal should print the parsed telemetry. This test uses a simulated message; physical ESP8266 sensor telemetry through the backend remains unverified. PostgreSQL persistence and React dashboard integration are pending.

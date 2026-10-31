@@ -46,7 +46,7 @@ The system consists of five major layers:
 |          COMMUNICATION LAYER         |
 |                                      |
 |             MQTT Broker              |
-|             HiveMQ Cloud             |
+|       Local Mosquitto Broker          |
 |                                      |
 +--------------------------------------+
                   |
@@ -56,8 +56,8 @@ The system consists of five major layers:
 |             BACKEND LAYER            |
 |                                      |
 |   Python Backend / FastAPI           |
-|   Node-RED Integration               |
-|   PostgreSQL Database                |
+|   MQTT Subscriber                    |
+|   PostgreSQL (planned)               |
 |                                      |
 |   - Data processing                  |
 |   - Occupancy monitoring             |
@@ -112,7 +112,7 @@ The firmware also uses a sequence timeout to prevent incomplete sensor sequences
 
 ### 4.3 Communication Using MQTT
 
-After calculating occupancy, the ESP8266 will publish telemetry data to an MQTT broker through Wi-Fi.
+After calculating occupancy, the ESP8266 is intended to publish telemetry data to an MQTT broker through Wi-Fi. The Python backend subscriber has been verified separately with simulated telemetry; physical sensor telemetry has not yet been integrated with or verified through the backend.
 
 Proposed MQTT topics:
 
@@ -125,7 +125,7 @@ The telemetry topic will carry occupancy and sensor information, while the statu
 
 ### 4.4 Backend Processing
 
-The backend receives MQTT messages and processes the incoming telemetry.
+The backend exposes a FastAPI health endpoint and a Python MQTT subscriber. The health endpoint responds, and the subscriber has connected to the configured Mosquitto broker, subscribed to `hostelpulse/mess/mess-node-01/telemetry`, and successfully received and parsed a simulated `ENTRY` JSON message.
 
 The planned backend responsibilities include:
 
@@ -135,7 +135,7 @@ The planned backend responsibilities include:
 - Providing data to the frontend.
 - Supporting crowd-level monitoring.
 
-PostgreSQL is planned for persistent data storage.
+PostgreSQL persistence is not implemented yet. React dashboard integration is also pending.
 
 ### 4.5 Frontend Visualization
 
@@ -202,10 +202,11 @@ Frontend displays information
 | Basic entry/exit counting | Prototype completed |
 | E18-D80NK integration | Pending |
 | Wi-Fi communication | Connectivity tested; firmware integration pending |
-| MQTT communication | Pending |
-| Backend processing | Pending |
-| Database integration | Pending |
-| Frontend dashboard | Separate development work |
+| MQTT broker | Mosquitto tested locally |
+| Python MQTT subscriber | Connected, subscribed, and parsed simulated `ENTRY` telemetry |
+| Physical ESP8266 sensor telemetry through backend | Pending |
+| PostgreSQL persistence | Not implemented |
+| React dashboard integration | Pending |
 | End-to-end integration | Pending |
 
 ## 8. Future Improvements

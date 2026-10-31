@@ -45,7 +45,7 @@ Our goal is simple: **less guesswork, better planning, smarter hostels.**
 | 👥 People Counting | Tracks mess entries and exits using two IR sensors | In development |
 | 📊 Live Occupancy | Maintains the estimated number of people inside | In development |
 | ⏱️ Wait-Time Estimation | Estimates queue waiting time using occupancy and exit rate | Planned |
-| 📡 MQTT Communication | Transfers sensor telemetry to the local broker | Broker tested |
+| 📡 MQTT Communication | Carries mess-node telemetry through the local broker | Python subscriber verified with simulated telemetry |
 | 📈 Historical Insights | Stores and visualizes occupancy trends | Planned |
 | 🔔 Notifications | Provides alerts and mess updates | Planned |
 | 💧 Water Tank Monitoring | Originally proposed extension for hostel water monitoring | Future scope |
@@ -98,7 +98,7 @@ The current architecture follows an offline-first IoT communication approach.
 
 - **Local-first operation:** The ESP8266 and laptop communicate over a shared Wi-Fi hotspot.
 - **MQTT messaging:** Mosquitto acts as the local message broker.
-- **Backend processing:** FastAPI will receive and process sensor telemetry.
+- **Backend processing:** FastAPI exposes a health endpoint, and a Python MQTT subscriber receives and parses telemetry.
 - **Data persistence:** PostgreSQL will store historical occupancy information.
 - **Visualization:** The React dashboard will present monitoring information.
 
@@ -203,10 +203,15 @@ HostelPulse/
 - [x] ESP8266-to-MQTT integration
 - [x] MQTT test message publishing
 - [ ] Sensor-based MQTT telemetry publishing
-- [ ] Python MQTT subscriber
+- [x] Python MQTT subscriber receives and parses simulated telemetry
+- [ ] Physical ESP8266 sensor telemetry integrated with and verified through the backend
 - [ ] PostgreSQL integration
 - [ ] React dashboard integration
 - [ ] On-site testing and accuracy evaluation
+
+### Backend Milestone
+
+Verified: the FastAPI health endpoint responds, and the Python MQTT subscriber connects to the configured Mosquitto broker and subscribes to `hostelpulse/mess/mess-node-01/telemetry`. A simulated `ENTRY` JSON message was received and parsed successfully. The physical ESP8266 sensor telemetry path has not yet been integrated with or verified through the backend. PostgreSQL persistence and React dashboard integration are still pending.
 
 ---
 
