@@ -1,6 +1,8 @@
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI, Query
+from fastapi.staticfiles import StaticFiles
 import psycopg
 
 from . import database
@@ -31,6 +33,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="HostelPulse API", lifespan=lifespan)
 
+frontend_dir = Path(__file__).resolve().parents[2] / "frontend"
+
 
 @app.get("/health")
 def health() -> dict[str, str]:
@@ -52,3 +56,6 @@ def get_current_occupancy() -> list[dict]:
 @app.get("/telemetry/events")
 def get_telemetry_events(limit: int = Query(default=50, ge=1, le=500)) -> list[dict]:
     return database.get_telemetry_events(limit)
+
+
+app.mount("/", StaticFiles(directory=frontend_dir, html=True), name="frontend")
