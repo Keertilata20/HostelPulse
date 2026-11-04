@@ -46,4 +46,8 @@ class MqttSubscriber:
             payload = TelemetryPayload.model_validate(raw_payload)
             self._on_telemetry(payload)
         except (UnicodeDecodeError, json.JSONDecodeError, ValidationError, ValueError) as exc:
-            print(f"Ignored invalid telemetry: {exc}", flush=True)
+            print(
+                f"Ignored invalid telemetry on {message.topic}; "
+                f"received bytes={message.payload!r}; error={exc}",
+                flush=True,
+            )
