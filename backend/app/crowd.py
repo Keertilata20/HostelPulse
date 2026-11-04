@@ -1,0 +1,19 @@
+import os
+
+
+MODERATE_THRESHOLD = int(os.getenv("CROWD_MODERATE_THRESHOLD", "5"))
+BUSY_THRESHOLD = int(os.getenv("CROWD_BUSY_THRESHOLD", "10"))
+
+if MODERATE_THRESHOLD < 0 or BUSY_THRESHOLD <= MODERATE_THRESHOLD:
+    raise RuntimeError(
+        "Crowd thresholds must satisfy 0 <= CROWD_MODERATE_THRESHOLD "
+        "< CROWD_BUSY_THRESHOLD."
+    )
+
+
+def crowd_level(occupancy: int) -> str:
+    if occupancy >= BUSY_THRESHOLD:
+        return "Busy"
+    if occupancy >= MODERATE_THRESHOLD:
+        return "Moderate"
+    return "Low"

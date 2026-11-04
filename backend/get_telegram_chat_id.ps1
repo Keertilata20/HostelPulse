@@ -1,10 +1,14 @@
 $ErrorActionPreference = "Stop"
 
-$secureToken = Read-Host "Enter the BotFather token (input is hidden)" -AsSecureString
-$tokenPointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureToken)
+$null = Read-Host "Copy the complete BotFather token to your clipboard, then press Enter here"
+$botToken = (Get-Clipboard -Raw).Trim()
 
 try {
-    $botToken = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($tokenPointer).Trim()
+    if ($botToken -notmatch '^\d+:[A-Za-z0-9_-]+$') {
+        Write-Host "The clipboard does not contain a complete BotFather token. Copy the full token from BotFather, then run this helper again. The token was not displayed."
+        return
+    }
+
     $curl = Get-Command "curl.exe" -ErrorAction Stop
     $processInfo = New-Object System.Diagnostics.ProcessStartInfo
     $processInfo.FileName = $curl.Source
@@ -18,7 +22,7 @@ try {
     $process.StartInfo = $processInfo
     $null = $process.Start()
     $requestUrl = "https://api.telegram.org/bot$botToken/getUpdates"
-    $process.StandardInput.WriteLine(('url = "' + $requestUrl + '"'))
+    $process.StandardInput.WriteLine("url = $requestUrl")
     $process.StandardInput.Close()
     $responseText = $process.StandardOutput.ReadToEnd()
     $curlError = $process.StandardError.ReadToEnd()
@@ -74,8 +78,5 @@ try {
     }
 } finally {
     if ($null -ne $process) { $process.Dispose() }
-    if ($tokenPointer -ne [IntPtr]::Zero) {
-        [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($tokenPointer)
-    }
     Remove-Variable botToken, requestUrl, response, responseText, curlError, chats -ErrorAction SilentlyContinue
 }

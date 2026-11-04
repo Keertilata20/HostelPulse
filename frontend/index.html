@@ -20,11 +20,14 @@
     .intro { display:flex; align-items:end; justify-content:space-between; gap:16px; margin:0 0 18px }
     h2 { margin:0; font-size:28px; letter-spacing:-.04em }
     .updated { color:var(--muted); font-size:13px }
-    .grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px }
+    .grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px }
     .card,.panel { border:1px solid var(--line); border-radius:18px; background:linear-gradient(145deg,rgba(21,35,54,.96),rgba(15,26,42,.96)); box-shadow:0 12px 32px #0002 }
     .card { min-height:145px; padding:20px 22px }
     .label { color:var(--muted); font-size:13px }
     .value { margin-top:13px; font-size:42px; line-height:1; font-weight:700; letter-spacing:-.05em }
+    .value.crowd-low { color:var(--mint) }
+    .value.crowd-moderate { color:var(--amber) }
+    .value.crowd-busy { color:#ff8e98 }
     .unit { margin-left:7px; color:var(--muted); font-size:14px; font-weight:500; letter-spacing:0 }
     .hint { margin-top:12px; color:var(--muted); font-size:12px }
     .event-pill { display:inline-block; padding:4px 9px; border-radius:999px; background:#193a36; color:var(--mint); font-size:12px; font-weight:700 }
@@ -41,7 +44,9 @@
     .empty { padding:26px 20px; color:var(--muted); text-align:center }
     .error { display:none; margin-top:16px; padding:12px 14px; border:1px solid #7a3d44; border-radius:12px; background:#351e27; color:#ffc3c9; font-size:13px }
     footer { display:flex; justify-content:space-between; gap:12px; margin-top:16px; color:var(--muted); font-size:12px }
-    @media(max-width:700px) { .shell{width:min(100% - 24px,540px);padding-top:24px} header{align-items:flex-start;flex-direction:column}.grid{grid-template-columns:1fr}.card{min-height:120px}.value{font-size:36px}.intro{align-items:flex-start;flex-direction:column}.panel{overflow-x:auto}table{min-width:610px}footer{flex-direction:column} }
+    @media(max-width:850px) { .grid{grid-template-columns:repeat(2,1fr)} }
+    @media(max-width:700px) { .shell{width:min(100% - 24px,540px);padding-top:24px} header{align-items:flex-start;flex-direction:column}.card{min-height:120px}.value{font-size:36px}.intro{align-items:flex-start;flex-direction:column}.panel{overflow-x:auto}table{min-width:610px}footer{flex-direction:column} }
+    @media(max-width:480px) { .grid{grid-template-columns:1fr} }
   </style>
 </head>
 <body>
@@ -53,6 +58,7 @@
     <section class="intro"><div><h2>Live mess status</h2><div class="sub">Telemetry from the Mosquitto broker through the backend</div></div><div class="updated" id="updated">Waiting for backend…</div></section>
     <section class="grid" aria-label="Current statistics">
       <article class="card"><div class="label">People inside</div><div class="value" id="occupancy">—</div><div class="hint">Latest estimated occupancy</div></article>
+      <article class="card"><div class="label">Crowd level</div><div class="value" id="crowd-level">—</div><div class="hint" id="crowd-hint">Thresholds load from backend</div></article>
       <article class="card"><div class="label">Total entries</div><div class="value" id="entries">—</div><div class="hint">Cumulative simulated entries</div></article>
       <article class="card"><div class="label">Total exits</div><div class="value" id="exits">—</div><div class="hint">Cumulative simulated exits</div></article>
     </section>
@@ -68,17 +74,23 @@
     async function refresh() {
       const error = document.getElementById('error');
       try {
-        const [currentRes, latestRes, eventsRes] = await Promise.all([
+        const [currentRes, latestRes, eventsRes, crowdRes] = await Promise.all([
           fetch('/occupancy/current', {cache:'no-store'}),
           fetch('/telemetry/latest', {cache:'no-store'}),
-          fetch('/telemetry/events?limit=8', {cache:'no-store'})
+          fetch('/telemetry/events?limit=8', {cache:'no-store'}),
+          fetch('/crowd/status', {cache:'no-store'})
         ]);
         if (![currentRes, latestRes, eventsRes].every(r => r.ok)) throw new Error('The API returned an error. Check that the backend and database are running.');
-        const [currentRows, latest, events] = await Promise.all([currentRes.json(), latestRes.json(), eventsRes.json()]);
+        if (!crowdRes.ok) throw new Error('The crowd status endpoint returned an error.');
+        const [currentRows, latest, events, crowd] = await Promise.all([currentRes.json(), latestRes.json(), eventsRes.json(), crowdRes.json()]);
         const current = currentRows.find(row => row.device_id === 'mess-node-01') || currentRows[0];
         document.getElementById('occupancy').textContent = current?.occupancy ?? '—';
         document.getElementById('entries').textContent = current?.entries ?? '—';
         document.getElementById('exits').textContent = current?.exits ?? '—';
+        const crowdElement = document.getElementById('crowd-level');
+        crowdElement.textContent = crowd.level;
+        crowdElement.className = `value crowd-${crowd.level.toLowerCase()}`;
+        document.getElementById('crowd-hint').textContent = `Moderate ≥ ${crowd.moderate_threshold} · Busy ≥ ${crowd.busy_threshold}`;
         document.getElementById('updated').textContent = latest?.received_at ? `Updated ${fmtTime(latest.received_at)}` : 'No telemetry received yet';
         const body = document.getElementById('events');
         body.replaceChildren();

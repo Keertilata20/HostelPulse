@@ -5,6 +5,7 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 from . import database
+from .crowd import BUSY_THRESHOLD, MODERATE_THRESHOLD, crowd_level
 
 
 class TelegramBot:
@@ -33,13 +34,19 @@ class TelegramBot:
         if self._thread is not None:
             self._thread.join(timeout=2)
 
-    def notify_telemetry(self, event: dict) -> None:
+    def notify_telemetry(self, event: dict, previous_occupancy: int | None) -> None:
         if not self._enabled:
             return
+        occupancy = event["occupancy"]
+        if occupancy < BUSY_THRESHOLD or (
+            previous_occupancy is not None and previous_occupancy >= BUSY_THRESHOLD
+        ):
+            return
         message = (
-            "🧪 HostelPulse simulated occupancy update\n"
+            "⚠️ HostelPulse simulated crowd alert\n"
             f"Event: {event['event']}\n"
-            f"People inside: {event['occupancy']}\n"
+            f"Crowd level: {crowd_level(occupancy)}\n"
+            f"People inside: {occupancy} (Busy threshold: {BUSY_THRESHOLD})\n"
             f"Entries: {event['entries']}  |  Exits: {event['exits']}"
         )
         self.send_message_async(message)
@@ -109,6 +116,8 @@ class TelegramBot:
         return (
             "🧪 HostelPulse simulated status\n"
             f"People inside: {row['occupancy']}\n"
+            f"Crowd level: {crowd_level(row['occupancy'])}\n"
+            f"Moderate from {MODERATE_THRESHOLD}; Busy from {BUSY_THRESHOLD}\n"
             f"Entries: {row['entries']}\n"
             f"Exits: {row['exits']}"
         )

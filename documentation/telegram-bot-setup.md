@@ -2,6 +2,8 @@
 
 The backend can send an occupancy update after it saves valid telemetry and respond to `/status` in Telegram. Notifications are labeled as simulated for the current demo.
 
+Crowd levels use `CROWD_MODERATE_THRESHOLD` and `CROWD_BUSY_THRESHOLD` from `backend/.env`. The demo defaults are 5 and 10 people. Telegram sends a crowd alert only when occupancy rises from below the Busy threshold to at or above it; it will not repeat the alert for every event while occupancy remains Busy. `/status` and the dashboard display the current level.
+
 ## 1. Create the bot
 
 1. In Telegram, open [@BotFather](https://t.me/BotFather).
@@ -11,13 +13,13 @@ The backend can send an occupancy update after it saves valid telemetry and resp
 
 ## 2. Find your chat ID
 
-You already sent `/start` to the bot. From the project root in PowerShell, run:
+You already sent `/start` to the bot. Copy the complete token from BotFather to the clipboard. From the project root in PowerShell, run:
 
 ```powershell
 .\backend\get_telegram_chat_id.ps1
 ```
 
-Enter the BotFather token at the hidden prompt. The helper prints chat IDs from recent bot messages without displaying the token or message text. Copy the `ChatId` for your private bot chat. If it reports no chat, send `/start` to the bot again and rerun the helper. Do not run the backend bot polling yet, because Telegram's `getUpdates` polling must not be active in two places at once.
+Press Enter at the prompt; the helper reads the token from the clipboard without displaying it. It prints chat IDs from recent bot messages without showing the token or message text. Copy the `ChatId` for your private bot chat. If it reports no chat, send `/start` to the bot again and rerun the helper. Do not run the backend bot polling yet, because Telegram's `getUpdates` polling must not be active in two places at once.
 
 ## 3. Configure the backend
 
