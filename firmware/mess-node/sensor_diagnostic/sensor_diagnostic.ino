@@ -1,5 +1,5 @@
-const int SENSOR_A = D5;
-const int SENSOR_B = D6;
+const int SENSOR_A = D1;
+const int SENSOR_B = D2;
 
 void setup() {
   Serial.begin(115200);
@@ -13,9 +13,9 @@ void setup() {
 }
 
 void loop() {
-  Serial.print("D5/A=");
+  Serial.print("D1/A=");
   Serial.print(digitalRead(SENSOR_A));
-  Serial.print("  D6/B=");
+  Serial.print("  D2/B=");
   Serial.println(digitalRead(SENSOR_B));
   delay(300);
 }
