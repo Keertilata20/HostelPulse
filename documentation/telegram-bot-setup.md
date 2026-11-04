@@ -2,7 +2,7 @@
 
 The backend can send an occupancy update after it saves valid telemetry and respond to `/status` in Telegram. Notifications are labeled as simulated for the current demo.
 
-Crowd levels use `CROWD_MODERATE_THRESHOLD` and `CROWD_BUSY_THRESHOLD` from `backend/.env`. The demo defaults are 5 and 10 people. Telegram sends a crowd alert only when occupancy rises from below the Busy threshold to at or above it; it will not repeat the alert for every event while occupancy remains Busy. `/status` and the dashboard display the current level.
+Crowd levels use `CROWD_MODERATE_THRESHOLD` and `CROWD_BUSY_THRESHOLD` from `backend/.env`. The demo defaults are 5 and 10 people. `MESS_CAPACITY` defaults to 80 as a demo value for the dashboard gauge. Telegram sends a crowd alert only when occupancy rises from below the Busy threshold to at or above it; it will not repeat the alert for every event while occupancy remains Busy. `/status` and the dashboard display the current level.
 
 ## 1. Create the bot
 

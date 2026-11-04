@@ -6,7 +6,7 @@ from fastapi.staticfiles import StaticFiles
 import psycopg
 
 from . import database
-from .crowd import BUSY_THRESHOLD, MODERATE_THRESHOLD, crowd_level
+from .crowd import BUSY_THRESHOLD, MESS_CAPACITY, MODERATE_THRESHOLD, crowd_level
 from .mqtt_client import MqttSubscriber
 from .telegram_bot import TelegramBot
 from .telemetry import TelemetryPayload
@@ -86,6 +86,7 @@ def get_crowd_status() -> dict:
         "level": crowd_level(occupancy),
         "moderate_threshold": MODERATE_THRESHOLD,
         "busy_threshold": BUSY_THRESHOLD,
+        "capacity": MESS_CAPACITY,
     }
 
 

@@ -6,7 +6,7 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 from . import database
-from .crowd import BUSY_THRESHOLD, MODERATE_THRESHOLD, crowd_level
+from .crowd import BUSY_THRESHOLD, MESS_CAPACITY, MODERATE_THRESHOLD, crowd_level
 
 
 class TelegramBot:
@@ -44,7 +44,7 @@ class TelegramBot:
         ):
             return
         message = (
-            "⚠️ HostelPulse simulated crowd alert\n"
+            "⚠️ HostelPulse crowd alert (demo)\n"
             f"Event: {event['event']}\n"
             f"Crowd level: {crowd_level(occupancy)}\n"
             f"People inside: {occupancy} (Busy threshold: {BUSY_THRESHOLD})\n"
@@ -124,8 +124,8 @@ class TelegramBot:
         else:
             recent_event = "Last event: none recorded"
         return (
-            "🧪 HostelPulse simulated status\n"
-            f"People inside: {row['occupancy']}\n"
+            "HostelPulse occupancy status (demo)\n"
+            f"People inside: {row['occupancy']} of {MESS_CAPACITY} demo seats\n"
             f"Crowd level: {crowd_level(row['occupancy'])}\n"
             f"Moderate from {MODERATE_THRESHOLD}; Busy from {BUSY_THRESHOLD}\n"
             f"Entries: {row['entries']}\n"
