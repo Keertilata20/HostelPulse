@@ -224,6 +224,7 @@ Verified: the FastAPI health endpoint responds, and the Python MQTT subscriber c
 | [MQTT Data Format](documentation/mqtt-data-format.md) | Telemetry topics and JSON structure |
 | [MQTT Setup](documentation/mqtt-setup.md) | Broker installation and connectivity testing |
 | [Wi-Fi Connectivity](documentation/wifi-connectivity.md) | ESP8266 Wi-Fi setup and testing |
+| [Telegram Bot Setup](documentation/telegram-bot-setup.md) | Occupancy alerts and the `/status` command |
 
 ---
 
