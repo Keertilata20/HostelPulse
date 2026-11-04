@@ -15,7 +15,7 @@ subscriber: MqttSubscriber | None = None
 telegram_bot: TelegramBot | None = None
 
 
-def save_telemetry(payload: TelemetryPayload) -> None:
+def save_telemetry(payload: TelemetryPayload) -> bool:
     try:
         current_rows = database.get_current_occupancy()
         previous = next(
@@ -26,10 +26,11 @@ def save_telemetry(payload: TelemetryPayload) -> None:
         saved = database.save_telemetry(payload.model_dump())
     except psycopg.Error as exc:
         print(f"Could not save telemetry to PostgreSQL: {exc}", flush=True)
-        return
+        return False
     print(f"Telemetry saved: device={saved['device_id']} event={saved['event']} occupancy={saved['occupancy']}", flush=True)
     if telegram_bot is not None:
         telegram_bot.notify_telemetry(saved, previous_occupancy)
+    return True
 
 
 @asynccontextmanager

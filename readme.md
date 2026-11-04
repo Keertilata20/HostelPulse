@@ -61,6 +61,7 @@ HostelPulse focuses on making everyday hostel management more intelligent and co
 | ⏱️ Wait-Time Estimation | Estimates queue waiting time using occupancy and exit rate | Planned |
 | 📡 MQTT Communication | Local Mosquitto, backend subscriber, database, and API work with generated telemetry | Verified with demo events |
 | 📈 Occupancy History | Stores events and charts recent occupancy readings | Implemented |
+| 🚦 Crowd-Level LEDs | Backend MQTT response and ESP8266 LED receiver sketch | Implemented in code; hardware verification pending |
 | 🔔 Telegram Bot | `/status` replies and alerts when occupancy crosses the Busy threshold | Implemented for one configured chat or group |
 | 💧 Water Tank Monitoring | Originally proposed extension for hostel water monitoring | Future scope |
 
@@ -104,6 +105,8 @@ The current software demo uses a local Mosquitto broker and generated MQTT event
 ```
 
 The ESP8266 sensors and firmware are the intended telemetry source; the current verified software demo injects generated events at the MQTT broker.
+
+For the demo's return path, the backend publishes the calculated crowd level back to MQTT. An ESP8266 LED indicator sketch subscribes to that level, while the dashboard and Telegram bot read the same backend state. This demonstrates a two-direction MQTT flow with generated input; the LED sketch does not read sensors.
 
 ### Communication Strategy
 
@@ -189,6 +192,7 @@ HostelPulse/
 │   └── mess-node/
 │       ├── mess-node.ino                 # People-counter prototype
 │       ├── mqtt_sensor_integration/      # Sensor counting + MQTT sketch
+│       ├── mqtt_led_indicator/           # Crowd-level MQTT receiver and LED outputs
 │       ├── mqtt_telemetry_test/          # One-shot generated telemetry sketch
 │       ├── mqtt_test/                    # Standalone MQTT connectivity test
 │       ├── sensor_diagnostic/            # Sensor pin diagnostic
@@ -246,18 +250,20 @@ From the first hardware experiment to the complete monitoring workflow, here's w
 - [x] HTML/CSS/JavaScript dashboard with occupancy history chart
 - [x] Configurable crowd levels and Telegram Busy-threshold alert
 - [x] Telegram `/status` and `/help` commands
-- [x] Physical ESP8266 sensor telemetry integrated with and verified through the backend
-- [x] MQTT device status topic and Last Will configuration
-- [x] On-site testing and accuracy evaluation
+- [x] Backend crowd-level response topic and ESP8266 LED receiver sketch
+- [ ] Verify physical LED response over the shared hotspot
+- [ ] Physical ESP8266 sensor telemetry integrated with and verified through the backend
+- [ ] MQTT device status topic and Last Will configuration
+- [ ] On-site testing and accuracy evaluation
 
 ### 🐍 Backend & Database
 - [x] Python MQTT subscriber implementation
 - [x] MQTT message reception and parsing
-- [x] Physical ESP8266 sensor telemetry integration
+- [ ] Physical ESP8266 sensor telemetry integration
 - [x] FastAPI backend integration
 - [x] PostgreSQL connectivity and data persistence
 
-Verified for the software demo: generated `ENTRY` and `EXIT` events pass through local Mosquitto, are validated by the Python subscriber, stored in PostgreSQL, and returned by the FastAPI endpoints. The dashboard reads those endpoints, and the Telegram bot responds to `/status` and sends a Busy-threshold alert. This confirms the software path; physical ESP8266 sensor telemetry through the backend and on-site sensor accuracy remain unverified.
+Verified for the software demo: generated `ENTRY` and `EXIT` events pass through local Mosquitto, are validated by the Python subscriber, stored in PostgreSQL, and returned by the FastAPI endpoints. The dashboard reads those endpoints, Telegram responds to `/status` and sends Busy-threshold alerts, and the backend publishes a crowd-level response for the ESP8266 LED sketch. Physical sensor telemetry and the LED response over Wi-Fi still need hardware verification.
 
 ---
 

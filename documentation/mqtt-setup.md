@@ -206,3 +206,11 @@ Invoke-RestMethod http://127.0.0.1:8000/health
 ```
 
 The backend terminal should print that the telemetry was saved. Check `/telemetry/latest`, `/occupancy/current`, and `/telemetry/events` in the API or at `http://127.0.0.1:8000/docs`. This test uses a generated message; physical ESP8266 sensor telemetry through the backend remains unverified. The dashboard is served at `http://127.0.0.1:8000/` and reads the same API.
+
+## 14. Crowd-Level LED Return Path
+
+The backend publishes `LOW`, `MODERATE`, or `BUSY` to `hostelpulse/mess/mess-node-01/crowd-level` after storing a valid telemetry event. The separate `firmware/mess-node/mqtt_led_indicator/mqtt_led_indicator.ino` sketch subscribes to that topic and drives green, yellow, or red LEDs. It does not read the sensors, so generated telemetry can exercise the output path.
+
+For the ESP8266 to reach Mosquitto, the broker listener must include the laptop's hotspot interface. The repository broker configuration now listens on its network interfaces; it allows anonymous connections for this controlled local demo, so keep the broker on a trusted private hotspot and do not expose the MQTT port to the internet. Set `MQTT_SERVER` in the LED sketch to the laptop's current hotspot IPv4 address (check `ipconfig` if it changed). Create the local `secrets.h` from the example and set the hotspot Wi-Fi credentials.
+
+Wire each LED through its own current-limiting resistor: green to D1, yellow to D2, red to D7, and each LED's cathode to GND. Upload the LED indicator sketch. Start Mosquitto and the backend, then publish telemetry as usual. The backend log should show the published crowd level; a subscriber to the crowd-level topic should see the same value, and the matching LED should turn on. The dashboard and Telegram status use the same backend occupancy and crowd thresholds.

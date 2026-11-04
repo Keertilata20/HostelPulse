@@ -124,7 +124,7 @@ hostelpulse/mess/mess-node-01/telemetry
 hostelpulse/mess/mess-node-01/status
 ```
 
-The backend subscribes to the telemetry topic. The status topic and MQTT Last Will and Testament (LWT) behavior remain proposed work.
+The backend subscribes to the telemetry topic. After it saves a valid event and calculates the crowd level, it publishes `LOW`, `MODERATE`, or `BUSY` to `hostelpulse/mess/mess-node-01/crowd-level` with the latest value retained. The separate ESP8266 LED indicator sketch subscribes to that topic and lights the matching LED. The device status topic and MQTT Last Will and Testament (LWT) behavior remain proposed work.
 
 ### 4.4 Backend Processing
 
@@ -132,7 +132,7 @@ The backend exposes a FastAPI health endpoint and a Python MQTT subscriber. With
 
 PostgreSQL stores each valid event in `telemetry_events` and keeps the latest occupancy per device in `current_occupancy`. FastAPI exposes `/health`, `/telemetry/latest`, `/occupancy/current`, `/telemetry/events`, and `/crowd/status`. Database connectivity and schema initialization are checked during startup; the API does not start if PostgreSQL is unavailable.
 
-Generated MQTT events have been received, saved, and read back through the API. Physical ESP8266 sensor telemetry through the backend remains unverified.
+Generated MQTT events are saved and read back through the API; the backend also publishes the matching crowd level for the ESP8266 LED indicator. Physical sensor telemetry through the backend remains unverified.
 
 ### 4.5 Frontend Visualization
 
@@ -211,7 +211,8 @@ Frontend displays information
 | PostgreSQL persistence | Implemented; simulated payload stored and read through database functions |
 | Static dashboard backed by API | Implemented for generated telemetry |
 | Telegram commands and Busy alert | Implemented for configured chat/group |
-| Software path: generated MQTT → database → API/dashboard/bot | Verified |
+| Generated telemetry → backend/database → dashboard and Telegram | Verified |
+| Backend crowd-level MQTT response → ESP8266 LED sketch | Implemented in software; hardware demonstration pending |
 | Physical sensor-to-backend end-to-end path | Pending |
 
 ## 8. Future Improvements

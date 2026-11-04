@@ -28,12 +28,15 @@ PostgreSQL Database
 
 ## 3. MQTT Topics
 
-The backend currently subscribes to the telemetry topic. The status topic is reserved for future device availability reporting:
+The backend subscribes to the telemetry topic and publishes the crowd-level response. The status topic is reserved for future device availability reporting:
 
 | Topic | Purpose |
 |---|---|
 | hostelpulse/mess/mess-node-01/telemetry | Occupancy and sensor telemetry |
+| hostelpulse/mess/mess-node-01/crowd-level | Backend-to-device crowd-level LED command (`LOW`, `MODERATE`, or `BUSY`) |
 | hostelpulse/mess/mess-node-01/status | Device online/offline status |
+
+After a valid telemetry event is stored, the backend publishes the calculated crowd level. The LED indicator sketch subscribes to this topic, and the message is retained so a reconnecting indicator receives the latest level. The LED-only demo sketch does not read sensors or publish sensor telemetry.
 
 The device identifier `mess-node-01` uniquely identifies the mess hardware node.
 

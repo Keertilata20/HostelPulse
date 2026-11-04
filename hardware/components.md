@@ -16,6 +16,8 @@ The hardware node processes sensor readings locally using an ESP8266 microcontro
 | E18-D80NK IR sensors | 2 | Improved proximity detection | Arrived, testing pending |
 | Breadboard | 1 | Circuit prototyping | Available |
 | Jumper wires | As available | Electrical connections | Available |
+| Red, yellow, and green LEDs | As available | Local Busy, Moderate, and Low indicator | Planned |
+| Current-limiting resistors | One per LED | Limit LED current from ESP8266 GPIO pins | Planned |
 | USB cable | 1 | Programming and power | Tested |
 
 ## 3. Microcontroller
@@ -80,6 +82,7 @@ The initial HW-201 prototype uses the following connections:
 - [x] ESP8266 Wi-Fi connectivity test.
 - [x] Standalone ESP8266-to-Mosquitto MQTT publishing test.
 - [ ] Sensor-counter telemetry integrated with the backend.
+- [x] MQTT crowd-level LED receiver sketch added; physical LED wiring/demo remains to be verified.
 
 ## 7. Safety Considerations
 
@@ -88,3 +91,9 @@ The ESP8266 GPIO pins operate at 3.3V logic levels and are not 5V tolerant.
 The E18-D80NK sensor output must be verified before connecting it to an ESP8266 GPIO pin. Its power supply, output type, and voltage compatibility must be checked first.
 
 Do not connect an unverified 5V output directly to the microcontroller.
+
+## 8. Crowd-Level LED Indicator
+
+The separate `firmware/mess-node/mqtt_led_indicator/mqtt_led_indicator.ino` sketch subscribes to the backend's MQTT crowd-level topic. It does not read the sensors. For a demo driven by generated telemetry, the backend calculates the level and publishes `LOW`, `MODERATE`, or `BUSY`; the ESP8266 lights green, yellow, or red respectively.
+
+The sketch defaults to D1 for green, D2 for yellow, and D7 for red. Connect each GPIO through its own current-limiting resistor to the LED anode, and connect each LED cathode to GND. These are assumed connections; confirm the actual wiring before powering the LEDs. The laptop broker must be reachable from the ESP8266 over the shared hotspot.
