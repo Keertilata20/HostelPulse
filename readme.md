@@ -195,20 +195,20 @@ HostelPulse/
 ## 🚧 Development Roadmap
 
 - [x] Initial ESP8266 hardware setup
-- [x] IR sensor experimentation
+- [x] IR sensor experimentation using HW-201 modules
 - [x] Wi-Fi connectivity testing
-- [x] Mosquitto MQTT broker installation
+- [x] Mosquitto MQTT broker installation and configuration
 - [x] Local MQTT publish/subscribe testing
 - [x] Hotspot network connectivity verification
-- [x] ESP8266-to-MQTT integration
-- [x] MQTT test message publishing
+- [x] ESP8266-to-MQTT integration (standalone test)
+- [x] MQTT test message publishing from ESP8266
 - [ ] Sensor-based MQTT telemetry publishing
 - [x] Python MQTT subscriber receives and parses simulated telemetry
+- [x] PostgreSQL connectivity and simulated telemetry persistence
 - [ ] Physical ESP8266 sensor telemetry integrated with and verified through the backend
-- [ ] PostgreSQL integration
-- [ ] React dashboard integration
+- [ ] React dashboard integration with the backend
+- [ ] Telegram notifications verified with live telemetry
 - [ ] On-site testing and accuracy evaluation
-
 ### Backend Milestone
 
 Verified: the FastAPI health endpoint responds, and the Python MQTT subscriber connects to the configured Mosquitto broker and subscribes to `hostelpulse/mess/mess-node-01/telemetry`. A simulated `ENTRY` JSON message was received and parsed successfully. The physical ESP8266 sensor telemetry path has not yet been integrated with or verified through the backend. PostgreSQL persistence and React dashboard integration are still pending.
