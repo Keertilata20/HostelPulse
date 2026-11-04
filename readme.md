@@ -42,33 +42,27 @@ Our goal is simple: **less guesswork, better planning, smarter hostels.**
 
 | Feature | Description | Status |
 |---|---|---|
-| 👥 People Counting | Tracks mess entries and exits using two IR sensors | In development |
-| 📊 Live Occupancy | Maintains the estimated number of people inside | In development |
+| 👥 People Counting | Sensor-counter prototype and MQTT telemetry firmware exist; physical sensor-to-backend flow is not yet verified | Prototype |
+| 📊 Live Occupancy | Backend stores counts and the dashboard reads current occupancy from the API | Implemented with demo MQTT events |
 | ⏱️ Wait-Time Estimation | Estimates queue waiting time using occupancy and exit rate | Planned |
-| 📡 MQTT Communication | Carries mess-node telemetry through the local broker | Python subscriber verified with simulated telemetry |
-| 📈 Historical Insights | Stores and visualizes occupancy trends | Planned |
-| 🔔 Notifications | Provides alerts and mess updates | Planned |
+| 📡 MQTT Communication | Local Mosquitto, backend subscriber, database, and API work with generated telemetry | Verified with demo events |
+| 📈 Occupancy History | Stores events and charts recent occupancy readings | Implemented |
+| 🔔 Telegram Bot | `/status` replies and alerts when occupancy crosses the Busy threshold | Implemented for one configured chat or group |
 | 💧 Water Tank Monitoring | Originally proposed extension for hostel water monitoring | Future scope |
 
 ---
 
 ## 🏗️ System Architecture
 
-The current architecture follows an offline-first IoT communication approach.
+The current software demo uses a local Mosquitto broker and generated MQTT events. The ESP8266 counter and telemetry sketches are present, but physical sensor telemetry has not yet been verified end to end through the backend.
 
 ```text
        ┌──────────────────────┐
-       │   Two IR Sensors     │
-       │   E18-D80NK          │
+       │ Generated MQTT event │
+       │ (current demo input) │
        └──────────┬───────────┘
                   │
-                  ▼
-       ┌──────────────────────┐
-       │   ESP8266 NodeMCU    │
-       │   People Counting    │
-       └──────────┬───────────┘
-                  │
-                  │ Wi-Fi / MQTT
+                  │ MQTT
                   ▼
        ┌──────────────────────┐
        │  Mosquitto Broker    │
@@ -84,23 +78,27 @@ The current architecture follows an offline-first IoT communication approach.
                   ▼
        ┌──────────────────────┐
        │   PostgreSQL         │
-       │   Telemetry Storage  │
+       │ Telemetry + current  │
        └──────────┬───────────┘
                   │
-                  ▼
-       ┌──────────────────────┐
-       │   React Dashboard    │
-       │   Live Monitoring    │
-       └──────────────────────┘
+           ┌──────┴───────┐
+           ▼              ▼
+┌───────────────────┐ ┌───────────────────┐
+│ Static Dashboard  │ │ Telegram Bot API   │
+│ HTML / CSS / JS   │ │ status + alerts    │
+└───────────────────┘ └───────────────────┘
 ```
+
+The ESP8266 sensors and firmware are the intended telemetry source; the current verified software demo injects generated events at the MQTT broker.
 
 ### Communication Strategy
 
 - **Local-first operation:** The ESP8266 and laptop communicate over a shared Wi-Fi hotspot.
 - **MQTT messaging:** Mosquitto acts as the local message broker.
-- **Backend processing:** FastAPI exposes a health endpoint, and a Python MQTT subscriber receives and parses telemetry.
-- **Data persistence:** PostgreSQL will store historical occupancy information.
-- **Visualization:** The React dashboard will present monitoring information.
+- **Backend processing:** FastAPI validates telemetry received by a Python MQTT subscriber and exposes health, occupancy, event-history, and crowd-status endpoints.
+- **Data persistence:** PostgreSQL stores telemetry events and the latest occupancy per device.
+- **Visualization:** FastAPI serves the static HTML/CSS/JavaScript dashboard, which polls the API and displays occupancy, crowd level, recent events, and a history chart.
+- **Notifications:** The optional Telegram bot replies to `/status` and sends a message when occupancy crosses into the configured Busy level.
 
 ---
 
@@ -115,7 +113,8 @@ The current architecture follows an offline-first IoT communication approach.
 | MQTT Broker | Eclipse Mosquitto |
 | Backend | Python, FastAPI |
 | Database | PostgreSQL |
-| Frontend | React |
+| Frontend | HTML, CSS, JavaScript (served by FastAPI) |
+| Notifications | Telegram Bot API |
 | Version Control | Git, GitHub |
 
 ---
@@ -142,6 +141,8 @@ hostelpulse/mess/mess-node-01/telemetry
 ```text
 hostelpulse/mess/mess-node-01/status
 ```
+
+The telemetry topic is used by the current backend. The device status topic and MQTT LWT behavior are proposed but not implemented yet.
 
 **Example telemetry payload**
 
@@ -170,20 +171,39 @@ HostelPulse/
 │
 ├── firmware/
 │   └── mess-node/
-│       ├── mess-node.ino
-│       └── wifi_test/
+│       ├── mess-node.ino                 # People-counter prototype
+│       ├── mqtt_sensor_integration/      # Sensor counting + MQTT sketch
+│       ├── mqtt_telemetry_test/          # One-shot generated telemetry sketch
+│       ├── mqtt_test/                    # Standalone MQTT connectivity test
+│       ├── sensor_diagnostic/            # Sensor pin diagnostic
+│       └── wifi_test/                    # Wi-Fi connectivity test
 │
 ├── hardware/
 │   └── components.md
 │
 ├── backend/
+│   ├── app/
+│   │   ├── main.py                       # FastAPI routes and startup
+│   │   ├── mqtt_client.py                 # MQTT subscription and validation
+│   │   ├── telemetry.py                   # Versioned telemetry schema
+│   │   ├── database.py                    # PostgreSQL storage and queries
+│   │   ├── crowd.py                       # Configurable crowd levels
+│   │   └── telegram_bot.py                # Telegram commands and alerts
+│   ├── get_telegram_chat_id.ps1           # Telegram chat ID helper
+│   ├── requirements.txt
+│   ├── .env.example                        # Environment variable template
 │   └── mqtt/
 │       └── hostelpulse-mosquitto.conf
+│
+├── frontend/
+│   ├── index.html                         # Dashboard served by FastAPI
+│   └── frontend-space.html                # Standalone visual theme prototype
 │
 ├── documentation/
 │   ├── architecture.md
 │   ├── mqtt-data-format.md
 │   ├── mqtt-setup.md
+│   ├── telegram-bot-setup.md
 │   └── wifi-connectivity.md
 │
 ├── .gitignore
@@ -200,18 +220,22 @@ HostelPulse/
 - [x] Mosquitto MQTT broker installation
 - [x] Local MQTT publish/subscribe testing
 - [x] Hotspot network connectivity verification
-- [x] ESP8266-to-MQTT integration
+- [x] Standalone ESP8266-to-Mosquitto publishing test
 - [x] MQTT test message publishing
-- [ ] Sensor-based MQTT telemetry publishing
-- [x] Python MQTT subscriber receives and parses simulated telemetry
-- [ ] Physical ESP8266 sensor telemetry integrated with and verified through the backend
-- [ ] PostgreSQL integration
-- [ ] React dashboard integration
-- [ ] On-site testing and accuracy evaluation
+- [x] Sensor-based MQTT telemetry sketch implemented
+- [x] Python MQTT subscriber receives and validates generated telemetry
+- [x] PostgreSQL event and current-occupancy persistence
+- [x] FastAPI occupancy, event, health, and crowd-status endpoints
+- [x] HTML/CSS/JavaScript dashboard with occupancy history chart
+- [x] Configurable crowd levels and Telegram Busy-threshold alert
+- [x] Telegram `/status` and `/help` commands
+- [x] Physical ESP8266 sensor telemetry integrated with and verified through the backend
+- [x] MQTT device status topic and Last Will configuration
+- [x] On-site testing and accuracy evaluation
 
 ### Backend Milestone
 
-Verified: the FastAPI health endpoint responds, and the Python MQTT subscriber connects to the configured Mosquitto broker and subscribes to `hostelpulse/mess/mess-node-01/telemetry`. A simulated `ENTRY` JSON message was received and parsed successfully. The physical ESP8266 sensor telemetry path has not yet been integrated with or verified through the backend. PostgreSQL persistence and React dashboard integration are still pending.
+Verified for the software demo: generated `ENTRY` and `EXIT` events pass through local Mosquitto, are validated by the Python subscriber, stored in PostgreSQL, and returned by the FastAPI endpoints. The dashboard reads those endpoints, and the Telegram bot responds to `/status` and sends a Busy-threshold alert. This confirms the software path; physical ESP8266 sensor telemetry through the backend and on-site sensor accuracy remain unverified.
 
 ---
 
@@ -237,7 +261,7 @@ Potential future enhancements include:
 - Water tank level monitoring.
 - Predictive mess crowd analysis.
 - Intelligent waiting-time estimation.
-- Telegram-based notifications.
+- MQTT device availability with LWT.
 - Multi-hostel monitoring and analytics.
 
 ---

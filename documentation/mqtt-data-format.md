@@ -3,16 +3,16 @@
 
 ## 1. Overview
 
-HostelPulse uses the MQTT protocol for communication between the ESP8266 mess node and the backend system.
+HostelPulse uses MQTT to deliver mess occupancy telemetry to the backend. The verified software demo publishes generated events to local Mosquitto; physical sensor-to-backend publishing remains in progress.
 
 The ESP8266 processes sensor readings locally and publishes structured telemetry messages to an MQTT broker.
 
-HiveMQ Cloud is the planned MQTT broker.
+The current demo uses a local Mosquitto broker. A hosted broker such as HiveMQ is a possible future deployment option.
 
 ## 2. Communication Architecture
 
 ```text
-ESP8266 Mess Node
+Generated demo publisher (or, in the target setup, ESP8266 Mess Node)
        |
        | Wi-Fi
        v
@@ -28,7 +28,7 @@ PostgreSQL Database
 
 ## 3. MQTT Topics
 
-The following MQTT topics are proposed:
+The backend currently subscribes to the telemetry topic. The status topic is reserved for future device availability reporting:
 
 | Topic | Purpose |
 |---|---|
@@ -105,37 +105,37 @@ The ESP8266 publishes a telemetry message after a valid movement event.
 
 ## 8. MQTT Communication Configuration
 
-The planned communication configuration is:
+The current local demo configuration is:
 
 | Parameter | Configuration |
 |---|---|
 | Protocol | MQTT |
-| Broker | HiveMQ Cloud |
-| Transport | MQTT over TLS |
-| Port | 8883 |
+| Broker | Local Mosquitto |
+| Transport | MQTT over local TCP |
+| Port | 1883 |
 | Payload format | JSON |
-| Publisher | ESP8266 Mess Node |
+| Publisher | Generated demo events; ESP8266 firmware path not yet verified end to end |
 | Subscriber | Python Backend |
 
 Broker credentials must be stored securely and must not be committed to the public repository.
 
 ## 9. Device Status
 
-The status topic will be used to communicate device availability.
+The status topic is reserved for device availability but is not implemented yet.
 
-The implementation will use MQTT Last Will and Testament (LWT) to indicate unexpected disconnections.
+Future implementation can use MQTT Last Will and Testament (LWT) to indicate unexpected disconnections.
 
-A retained online message will be published after a successful connection.
+Retained online/offline messages are not implemented yet.
 
 ## 10. Implementation Status
 
-- [x] MQTT topic structure proposed.
-- [x] JSON telemetry schema defined.
-- [ ] JSON serialization in ESP8266 firmware.
-- [ ] HiveMQ Cloud configuration.
-- [ ] MQTT connection from ESP8266.
-- [ ] Backend subscription.
-- [ ] Telemetry storage.
+- [x] Version 1 JSON telemetry schema defined and validated by backend.
+- [x] Backend subscription to local Mosquitto telemetry topic.
+- [x] Generated telemetry persisted to PostgreSQL and exposed by API.
+- [x] Standalone ESP8266-to-Mosquitto test message published.
+- [ ] Verify sensor-derived telemetry from ESP8266 through backend.
+- [ ] Device status topic and LWT.
+- [ ] Hosted broker/TLS configuration, if needed for deployment.
 
 ## 11. Future Extensions
 

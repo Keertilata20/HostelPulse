@@ -34,11 +34,9 @@ RSSI readings fluctuated slightly between -66 dBm and -68 dBm. Such variations a
 
 - Testing was performed near the development location.
 - Wi-Fi availability and signal strength at the actual mess entrance remain unverified.
-- MQTT communication has not yet been implemented.
+- Standalone ESP8266-to-Mosquitto publishing has since been tested. Physical sensor telemetry flowing through the backend remains unverified.
 
 ## Next Steps
 
-- Install and configure a local MQTT broker.
-- Establish communication between the ESP8266 and laptop.
-- Test telemetry publishing and subscription.
 - Repeat Wi-Fi testing at the actual mess entrance.
+- Verify sensor-derived MQTT telemetry from the ESP8266 through the backend and dashboard.

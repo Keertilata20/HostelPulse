@@ -28,7 +28,7 @@ The ESP8266 is responsible for:
 - Detecting the order in which sensors are triggered.
 - Determining whether a person is entering or exiting.
 - Maintaining the current occupancy count.
-- Communicating with the backend through Wi-Fi and MQTT (planned).
+- Publishing telemetry through Wi-Fi and MQTT (a standalone ESP8266 broker test has passed; sensor-counter-to-backend integration is still unverified).
 
 The board uses the CH340 USB-to-serial interface for communication with the computer.
 
@@ -77,7 +77,9 @@ The initial HW-201 prototype uses the following connections:
 - [ ] E18-D80NK electrical verification.
 - [ ] E18-D80NK integration.
 - [ ] Final doorway sensor placement.
-- [ ] Wi-Fi and MQTT integration.
+- [x] ESP8266 Wi-Fi connectivity test.
+- [x] Standalone ESP8266-to-Mosquitto MQTT publishing test.
+- [ ] Sensor-counter telemetry integrated with the backend.
 
 ## 7. Safety Considerations
 

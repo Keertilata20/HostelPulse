@@ -131,7 +131,7 @@ Use the current device address from the local network settings if you need to ch
 3. Publish MQTT test messages from the ESP8266.
 4. Integrate MQTT publishing with the mess people-counter firmware.
 5. Integrate physical sensor telemetry with the Python backend and verify it end to end.
-6. Connect the backend to the React dashboard.
+6. Verify physical sensor telemetry through the backend and dashboard.
 
 ## 11. Security and Deployment Notes
 
@@ -193,7 +193,7 @@ To repeat the simulated telemetry check, start the broker, then start the backen
 if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
-$env:MQTT_HOST = "10.231.36.131" # Use the IPv4 address on the listener line in ../mqtt/hostelpulse-mosquitto.conf.
+$env:MQTT_HOST = "127.0.0.1" # Use the address configured on the broker listener.
 $env:MQTT_PORT = "1883"
 uvicorn app.main:app --reload
 ```
@@ -205,4 +205,4 @@ Invoke-RestMethod http://127.0.0.1:8000/health
 & "C:\Program Files\mosquitto\mosquitto_pub.exe" -h localhost -p 1883 -t "hostelpulse/mess/mess-node-01/telemetry" -m '{"schema_version":1,"device_id":"mess-node-01","event":"ENTRY","entries":1,"exits":0,"occupancy":1,"sensor_a":0,"sensor_b":1,"uptime_ms":125000}'
 ```
 
-The backend terminal should print that the telemetry was saved. Check `/telemetry/latest`, `/occupancy/current`, and `/telemetry/events` in the API or at `http://127.0.0.1:8000/docs`. This test uses a simulated message; physical ESP8266 sensor telemetry through the backend remains unverified. React dashboard integration is pending.
+The backend terminal should print that the telemetry was saved. Check `/telemetry/latest`, `/occupancy/current`, and `/telemetry/events` in the API or at `http://127.0.0.1:8000/docs`. This test uses a generated message; physical ESP8266 sensor telemetry through the backend remains unverified. The dashboard is served at `http://127.0.0.1:8000/` and reads the same API.

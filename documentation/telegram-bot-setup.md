@@ -1,6 +1,6 @@
 # HostelPulse Telegram Bot Setup
 
-The backend can send an occupancy update after it saves valid telemetry and respond to `/status` in Telegram. Notifications are labeled as simulated for the current demo.
+The backend can send an occupancy update after it saves valid telemetry and respond to `/status` in Telegram. During the current demo, the backend receives generated MQTT events; the bot reports the telemetry it receives.
 
 Crowd levels use `CROWD_MODERATE_THRESHOLD` and `CROWD_BUSY_THRESHOLD` from `backend/.env`. The demo defaults are 5 and 10 people. `MESS_CAPACITY` defaults to 80 as a demo value for the dashboard gauge. Telegram sends a crowd alert only when occupancy rises from below the Busy threshold to at or above it; it will not repeat the alert for every event while occupancy remains Busy. `/status` and the dashboard display the current level.
 
@@ -40,4 +40,4 @@ Restart the backend after Mosquitto is running. With both Telegram settings pres
 - Send `/start` or `/help` to see the command hint.
 - Publish a valid MQTT telemetry message; after it is saved, the bot sends an occupancy update.
 
-The bot only handles commands from the configured chat ID. The backend uses Telegram's HTTPS Bot API and long polling, so the laptop needs outbound internet access; no public webhook URL is required. See the official [Telegram Bot API](https://core.telegram.org/bots/api) and [bot setup guide](https://core.telegram.org/bots/features).
+The bot only handles commands from the configured chat ID, which can be a private chat or a group where the bot is present. The backend uses Telegram's HTTPS Bot API and long polling, so the laptop needs outbound internet access; no public webhook URL is required. See the official [Telegram Bot API](https://core.telegram.org/bots/api) and [bot setup guide](https://core.telegram.org/bots/features).

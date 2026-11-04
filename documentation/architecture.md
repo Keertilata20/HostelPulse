@@ -5,11 +5,11 @@
 
 HostelPulse is an IoT-based hostel monitoring system designed to monitor mess occupancy and provide real-time information about crowd levels.
 
-The system uses an ESP8266-based hardware node with two infrared proximity sensors to detect people entering and exiting the mess. The calculated occupancy information is transmitted to a backend system, which processes and stores the data for visualization through a web dashboard.
+The target system uses an ESP8266 node with two infrared proximity sensors to detect entries and exits. The current software demonstration sends generated telemetry through a local Mosquitto broker; physical sensor telemetry has not yet been verified end to end through the backend.
 
 ## 2. High-Level Architecture
 
-The system consists of five major layers:
+The target system consists of five major layers. In the current software demo, generated events enter at the broker, bypassing the physical sensing and edge-processing layers:
 
 1. **Sensing Layer:** Detects movement using two infrared proximity sensors.
 2. **Edge Processing Layer:** Uses the ESP8266 to determine movement direction and calculate occupancy.
@@ -57,7 +57,9 @@ The system consists of five major layers:
 |                                      |
 |   Python Backend / FastAPI           |
 |   MQTT Subscriber                    |
-|   PostgreSQL (planned)               |
+|   PostgreSQL                         |
+|   telemetry_events                   |
+|   current_occupancy                  |
 |                                      |
 |   - Data processing                  |
 |   - Occupancy monitoring             |
@@ -69,13 +71,14 @@ The system consists of five major layers:
 +--------------------------------------+
 |           APPLICATION LAYER          |
 |                                      |
-|           React Dashboard            |
+|    Static Web Dashboard              |
+|    HTML / CSS / JavaScript           |
 |                                      |
 |   - Current occupancy                |
 |   - Entry and exit statistics        |
 |   - Crowd level                      |
-|   - Historical graphs                |
-|   - Estimated waiting time            |
+|   - Recent events and history chart  |
+|   - Configured capacity gauge        |
 +--------------------------------------+
 ```
 
@@ -112,58 +115,56 @@ The firmware also uses a sequence timeout to prevent incomplete sensor sequences
 
 ### 4.3 Communication Using MQTT
 
-After calculating occupancy, the ESP8266 is intended to publish telemetry data to an MQTT broker through Wi-Fi. The Python backend subscriber has been verified separately with simulated telemetry; physical sensor telemetry has not yet been integrated with or verified through the backend.
+For the software demonstration, generated telemetry is published to the local Mosquitto broker on `127.0.0.1:1883`. The ESP8266 also has a standalone MQTT test sketch and a sensor-counting/MQTT integration sketch. The physical sensor-to-backend path has not yet been verified end to end.
 
-Proposed MQTT topics:
+Topics:
 
 ```text
 hostelpulse/mess/mess-node-01/telemetry
 hostelpulse/mess/mess-node-01/status
 ```
 
-The telemetry topic will carry occupancy and sensor information, while the status topic will indicate device connectivity.
+The backend subscribes to the telemetry topic. The status topic and MQTT Last Will and Testament (LWT) behavior remain proposed work.
 
 ### 4.4 Backend Processing
 
-The backend exposes a FastAPI health endpoint and a Python MQTT subscriber. The health endpoint responds, and the subscriber has connected to the configured Mosquitto broker, subscribed to `hostelpulse/mess/mess-node-01/telemetry`, and successfully received and parsed a simulated `ENTRY` JSON message.
+The backend exposes a FastAPI health endpoint and a Python MQTT subscriber. With local Mosquitto running, the subscriber connects to `hostelpulse/mess/mess-node-01/telemetry`, validates version 1 JSON, and stores valid events in PostgreSQL.
 
-The backend validates version 1 telemetry before storage. PostgreSQL stores each valid event in `telemetry_events` and keeps the latest occupancy per device in `current_occupancy`. FastAPI exposes the latest event, current occupancy, and recent event history. Database connectivity and schema initialization are checked during startup; the API does not start if PostgreSQL is unavailable.
+PostgreSQL stores each valid event in `telemetry_events` and keeps the latest occupancy per device in `current_occupancy`. FastAPI exposes `/health`, `/telemetry/latest`, `/occupancy/current`, `/telemetry/events`, and `/crowd/status`. Database connectivity and schema initialization are checked during startup; the API does not start if PostgreSQL is unavailable.
 
-The remaining backend responsibilities include:
-
-- Receiving sensor-node telemetry.
-- Processing occupancy information.
-- Maintaining historical records.
-- Providing data to the frontend.
-- Supporting crowd-level monitoring.
-
-PostgreSQL persistence has been implemented and checked using the documented simulated `ENTRY` payload. Physical ESP8266 sensor telemetry through the backend has not been verified. React dashboard integration is also pending.
+Generated MQTT events have been received, saved, and read back through the API. Physical ESP8266 sensor telemetry through the backend remains unverified.
 
 ### 4.5 Frontend Visualization
 
-The React-based dashboard will present the processed information in an understandable format.
+The HTML/CSS/JavaScript dashboard in `frontend/index.html` is served by FastAPI at `/`. It polls the backend every two seconds and displays:
 
-Planned dashboard indicators include:
+The dashboard polls the backend every two seconds and displays:
 
 - Current number of people inside the mess.
 - Total entries and exits.
 - Crowd-level status.
-- Historical occupancy graphs.
-- Estimated waiting time.
+- Occupancy trend and recent telemetry events.
+- API connection state and configured demo capacity.
+
+The page reads stored API data; it does not generate browser-side telemetry. `frontend/frontend-space.html` is a separate visual prototype.
+
+### 4.6 Telegram Bot
+
+When configured in `backend/.env`, the Telegram bot replies to `/status` and `/help`. It sends an alert when occupancy crosses from below the Busy threshold to at or above it. The bot is restricted to the configured private chat or group ID.
 
 ## 5. Crowd-Level Classification
 
-The system will classify mess occupancy into different crowd levels using configurable thresholds.
+The system classifies occupancy into crowd levels using configurable thresholds.
 
 An initial conceptual classification is:
 
 | Crowd Level | Interpretation |
 |---|---|
-| Green | Low crowd |
-| Yellow | Moderate crowd |
-| Red | High crowd |
+| Low | Below the moderate threshold |
+| Moderate | At or above moderate, below Busy |
+| Busy | At or above the Busy threshold |
 
-The actual occupancy thresholds will be configured after testing and observing the mess capacity.
+The demo defaults are Moderate at 5 people and Busy at 10 people. `MESS_CAPACITY` defaults to 80 for the dashboard gauge. These are configurable demo values, not measured mess-capacity settings.
 
 ## 6. Proposed Data Flow
 
@@ -208,17 +209,19 @@ Frontend displays information
 | Python MQTT subscriber and PostgreSQL persistence | Simulated `ENTRY` received over MQTT, validated, stored, and returned through the API |
 | Physical ESP8266 sensor telemetry through backend | Pending |
 | PostgreSQL persistence | Implemented; simulated payload stored and read through database functions |
-| React dashboard integration | Pending |
-| End-to-end integration | Pending |
+| Static dashboard backed by API | Implemented for generated telemetry |
+| Telegram commands and Busy alert | Implemented for configured chat/group |
+| Software path: generated MQTT → database → API/dashboard/bot | Verified |
+| Physical sensor-to-backend end-to-end path | Pending |
 
 ## 8. Future Improvements
 
-The system can be extended with:
+Potential next steps include:
 
 - More robust sensor filtering and debounce logic.
 - Automatic device status monitoring.
 - Improved occupancy accuracy.
-- Telegram-based crowd alerts.
+- Device availability monitoring with MQTT LWT.
 - Historical analytics and visualization.
 - Estimated waiting-time calculations.
 
