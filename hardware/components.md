@@ -16,8 +16,8 @@ The hardware node processes sensor readings locally using an ESP8266 microcontro
 | E18-D80NK IR sensors | 2 | Improved proximity detection | Arrived, testing pending |
 | Breadboard | 1 | Circuit prototyping | Available |
 | Jumper wires | As available | Electrical connections | Available |
-| Red, yellow, and green LEDs | As available | Local Busy, Moderate, and Low indicator | Planned |
-| Current-limiting resistors | One per LED | Limit LED current from ESP8266 GPIO pins | Planned |
+| Red, white, and red LEDs | 3 | Local Low, Moderate, and Busy indicators | Wired; demo verification pending |
+| 220 Ω current-limiting resistors | 3 | Limit LED current from ESP8266 GPIO pins | Wired; demo verification pending |
 | USB cable | 1 | Programming and power | Tested |
 
 ## 3. Microcontroller
@@ -82,7 +82,7 @@ The initial HW-201 prototype uses the following connections:
 - [x] ESP8266 Wi-Fi connectivity test.
 - [x] Standalone ESP8266-to-Mosquitto MQTT publishing test.
 - [ ] Sensor-counter telemetry integrated with the backend.
-- [x] MQTT crowd-level LED receiver sketch added; physical LED wiring/demo remains to be verified.
+- [x] MQTT crowd-level LED receiver sketch and LED wiring completed; live response demo pending.
 
 ## 7. Safety Considerations
 
@@ -94,6 +94,6 @@ Do not connect an unverified 5V output directly to the microcontroller.
 
 ## 8. Crowd-Level LED Indicator
 
-The separate `firmware/mess-node/mqtt_led_indicator/mqtt_led_indicator.ino` sketch subscribes to the backend's MQTT crowd-level topic. It does not read the sensors. For a demo driven by generated telemetry, the backend calculates the level and publishes `LOW`, `MODERATE`, or `BUSY`; the ESP8266 lights green, yellow, or red respectively.
+The separate `firmware/mess-node/mqtt_led_indicator/mqtt_led_indicator.ino` sketch subscribes to the backend's MQTT crowd-level topic. It does not read the sensors. For a demo driven by generated telemetry, the backend calculates the level and publishes `LOW`, `MODERATE`, or `BUSY`; the ESP8266 lights the corresponding red, white, or red LED.
 
-The sketch defaults to D1 for green, D2 for yellow, and D7 for red. Connect each GPIO through its own current-limiting resistor to the LED anode, and connect each LED cathode to GND. These are assumed connections; confirm the actual wiring before powering the LEDs. The laptop broker must be reachable from the ESP8266 over the shared hotspot.
+The sketch uses D1 for Low (red), D2 for Moderate (white), and D7 for Busy (red). Connect each GPIO through its own 220 Ω resistor to the LED anode, and connect each LED cathode to GND. The laptop broker must be reachable from the ESP8266 over the shared hotspot.
