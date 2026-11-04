@@ -3,33 +3,51 @@
 #include <string.h>
 #include "secrets.h"
 
-// Set this to the laptop's current IPv4 address on the shared Wi-Fi hotspot.
-// Mosquitto must listen on that interface for the ESP8266 to reach it.
+// MQTT broker configuration
 const char* MQTT_SERVER = "10.231.36.131";
 const int MQTT_PORT = 1883;
-const char* CROWD_TOPIC = "hostelpulse/mess/mess-node-01/crowd-level";
 
-// LED anodes connect to these pins through individual current-limiting
-// resistors; LED cathodes connect to GND. These pins avoid D5/D6 sensor pins.
-const int LED_LOW = D1;       // Green
-const int LED_MODERATE = D2;  // Yellow
-const int LED_BUSY = D7;      // Red
+const char* CROWD_TOPIC =
+    "hostelpulse/mess/mess-node-01/crowd-level";
+
+// LED pin assignments
+// LOW      = Red LED on D1
+// MODERATE = White LED on D2
+// BUSY     = Red LED on D7
+
+const int LED_LOW = D1;
+const int LED_MODERATE = D2;
+const int LED_BUSY = D7;
 
 WiFiClient wifiClient;
 PubSubClient mqttClient(wifiClient);
 
+
+// ------------------------------------
+// DISPLAY CROWD LEVEL
+// ------------------------------------
+
 void showCrowdLevel(const char* level) {
+
+  // Turn OFF all LEDs first
   digitalWrite(LED_LOW, LOW);
   digitalWrite(LED_MODERATE, LOW);
   digitalWrite(LED_BUSY, LOW);
 
   if (strcmp(level, "LOW") == 0) {
+
     digitalWrite(LED_LOW, HIGH);
+
   } else if (strcmp(level, "MODERATE") == 0) {
+
     digitalWrite(LED_MODERATE, HIGH);
+
   } else if (strcmp(level, "BUSY") == 0) {
+
     digitalWrite(LED_BUSY, HIGH);
+
   } else {
+
     Serial.print("Unknown crowd level: ");
     Serial.println(level);
     return;
@@ -39,83 +57,165 @@ void showCrowdLevel(const char* level) {
   Serial.println(level);
 }
 
-void handleMqttMessage(char* topic, byte* payload, unsigned int length) {
+
+// ------------------------------------
+// MQTT MESSAGE CALLBACK
+// ------------------------------------
+
+void handleMqttMessage(
+    char* topic,
+    byte* payload,
+    unsigned int length
+) {
+
   if (strcmp(topic, CROWD_TOPIC) != 0 || length >= 16) {
     return;
   }
 
   char level[16];
+
   memcpy(level, payload, length);
   level[length] = '\0';
+
   showCrowdLevel(level);
 }
 
+
+// ------------------------------------
+// WIFI CONNECTION
+// ------------------------------------
+
 void connectToWiFi() {
+
   WiFi.mode(WIFI_STA);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
   Serial.print("Connecting to Wi-Fi");
-  while (WiFi.status() != WL_CONNECTED) {
+
+  unsigned long startAttempt = millis();
+
+  while (
+      WiFi.status() != WL_CONNECTED &&
+      millis() - startAttempt < 20000
+  ) {
+
     delay(500);
     Serial.print(".");
   }
 
-  Serial.println();
-  Serial.println("Wi-Fi connected.");
-  Serial.print("ESP8266 IP: ");
-  Serial.println(WiFi.localIP());
+  if (WiFi.status() == WL_CONNECTED) {
+
+    Serial.println();
+    Serial.println("Wi-Fi connected.");
+
+    Serial.print("ESP8266 IP: ");
+    Serial.println(WiFi.localIP());
+
+  } else {
+
+    Serial.println();
+    Serial.println("Wi-Fi connection timed out.");
+  }
 }
 
+
+// ------------------------------------
+// MQTT CONNECTION
+// ------------------------------------
+
 void connectToMqtt() {
-  while (!mqttClient.connected()) {
+
+  while (
+      WiFi.status() == WL_CONNECTED &&
+      !mqttClient.connected()
+  ) {
+
     String clientId = "HostelPulse-led-node-";
     clientId += String(ESP.getChipId(), HEX);
 
     Serial.print("Connecting to MQTT broker...");
+
     if (mqttClient.connect(clientId.c_str())) {
+
       Serial.println("connected.");
+
       if (mqttClient.subscribe(CROWD_TOPIC, 1)) {
-        Serial.print("Subscribed to ");
+
+        Serial.print("Subscribed to: ");
         Serial.println(CROWD_TOPIC);
+
       } else {
-        Serial.println("Could not subscribe to crowd-level topic.");
+
+        Serial.println("MQTT subscription failed.");
       }
+
     } else {
-      Serial.print("failed, state = ");
+
+      Serial.print("MQTT connection failed. State: ");
       Serial.println(mqttClient.state());
+
       delay(5000);
     }
   }
 }
 
+
+// ------------------------------------
+// SETUP
+// ------------------------------------
+
 void setup() {
+
   Serial.begin(115200);
+
   pinMode(LED_LOW, OUTPUT);
   pinMode(LED_MODERATE, OUTPUT);
   pinMode(LED_BUSY, OUTPUT);
+
+  // Initially turn OFF all LEDs
   digitalWrite(LED_LOW, LOW);
   digitalWrite(LED_MODERATE, LOW);
   digitalWrite(LED_BUSY, LOW);
 
   Serial.println();
-  Serial.println("HostelPulse MQTT crowd-level LED indicator");
-  Serial.println("Green=LOW, yellow=MODERATE, red=BUSY");
+  Serial.println("--------------------------------");
+  Serial.println("HOSTELPULSE MQTT LED CONTROLLER");
+  Serial.println("--------------------------------");
+
+  Serial.println("Red   = LOW");
+  Serial.println("White = MODERATE");
+  Serial.println("Red   = BUSY");
 
   connectToWiFi();
+
   mqttClient.setServer(MQTT_SERVER, MQTT_PORT);
   mqttClient.setCallback(handleMqttMessage);
 }
 
+
+// ------------------------------------
+// MAIN LOOP
+// ------------------------------------
+
 void loop() {
+
   if (WiFi.status() != WL_CONNECTED) {
+
     Serial.println("Wi-Fi disconnected. Reconnecting...");
+
     connectToWiFi();
   }
 
-  if (!mqttClient.connected()) {
+  if (WiFi.status() == WL_CONNECTED &&
+      !mqttClient.connected()) {
+
     connectToMqtt();
   }
 
-  mqttClient.loop();
+  if (mqttClient.connected()) {
+
+    mqttClient.loop();
+  }
+
   delay(20);
 }
