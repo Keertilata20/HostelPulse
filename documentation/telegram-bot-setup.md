@@ -36,7 +36,7 @@ TELEGRAM_CHAT_ID=your_chat_id
 
 Restart the backend after Mosquitto is running. With both Telegram settings present and the laptop online, the backend logs `Telegram bot started` and sends a connection message to the configured chat.
 
-- Send `/status` to receive the latest occupancy, entries, and exits from PostgreSQL.
+- Send `/status` to receive the latest occupancy, crowd level, entry and exit totals, and the most recent event with its received time (India time).
 - Send `/start` or `/help` to see the command hint.
 - Publish a valid MQTT telemetry message; after it is saved, the bot sends an occupancy update.
 

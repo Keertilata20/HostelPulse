@@ -1,6 +1,7 @@
 import json
 import os
 import threading
+from zoneinfo import ZoneInfo
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
@@ -113,11 +114,21 @@ class TelegramBot:
         row = next((item for item in rows if item["device_id"] == "mess-node-01"), None)
         if row is None:
             return "🧪 HostelPulse demo: no occupancy data received yet."
+        latest = database.get_latest_telemetry()
+        if latest is not None and latest["device_id"] == row["device_id"]:
+            received_at = latest["received_at"].astimezone(ZoneInfo("Asia/Kolkata"))
+            recent_event = (
+                f"Last event: {latest['event']} at "
+                f"{received_at.strftime('%d %b %Y, %I:%M:%S %p IST')}"
+            )
+        else:
+            recent_event = "Last event: none recorded"
         return (
             "🧪 HostelPulse simulated status\n"
             f"People inside: {row['occupancy']}\n"
             f"Crowd level: {crowd_level(row['occupancy'])}\n"
             f"Moderate from {MODERATE_THRESHOLD}; Busy from {BUSY_THRESHOLD}\n"
             f"Entries: {row['entries']}\n"
-            f"Exits: {row['exits']}"
+            f"Exits: {row['exits']}\n"
+            f"{recent_event}"
         )
